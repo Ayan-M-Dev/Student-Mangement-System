@@ -1,3 +1,4 @@
+Please read the instructions in the `INSTRUCTIONS.md` file before starting the skill test.
 # Student Management System - Developer Skill Test
 
 A comprehensive full-stack web application for managing school operations including students, staff, classes, notices, and leave management. This project serves as a skill assessment platform for **Frontend**, **Backend**, and **Blockchain** developers.
