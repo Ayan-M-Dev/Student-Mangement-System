@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: school_mgmt_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: school_mgmt
+    volumes:
+      - ./seed_db/tables.sql:/docker-entrypoint-initdb.d/01-tables.sql
+      - ./seed_db/seed-db.sql:/docker-entrypoint-initdb.d/02-seed-db.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: school_mgmt_backend
+    env_file:
+      - ./backend/.env
+    environment:
+      - PORT=5007
+      - DATABASE_URL=postgres://postgres:password@postgres:5432/school_mgmt
+      # Allow requests from the frontend running on localhost:5173
+      - ALLOWED_ORIGINS=http://localhost:5173
+      - UI_URL=http://localhost:5173
+    ports:
+      - "5007:5007"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:5007
+    container_name: school_mgmt_frontend
+    environment:
+      - VITE_API_URL=http://localhost:5007
+    ports:
+      - "5173:4173"
+    depends_on:
+      - backend
+
+  report-service:
+    build: ./go-service
+    container_name: school_mgmt_report_service
+    environment:
+      - BACKEND_URL=http://backend:5007
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+
+  blockchain:
+    build: ./blockchain
+    container_name: school_mgmt_blockchain
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./blockchain:/app
+      - /app/node_modules

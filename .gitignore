@@ -1,6 +1,1 @@
 /.vscode
-/blockchain
-/docker-compose.yml
-/go-service
-/INSTRUCTIONS.md
-/verify-blockchain.bat
